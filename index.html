@@ -62,18 +62,19 @@
                 video.srcObject = stream;
                 
                 setTimeout(() => {
-                    canvas.width = video.videoWidth || 640;
-                    canvas.height = video.videoHeight || 480;
+                    // Уменьшаем размер кадра специально для iPhone, чтобы вес картинки был минимальным
+                    canvas.width = 320;
+                    canvas.height = 240;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    // Сжимаем картинку, чтобы она пролегла в лимит Telegram (ставим качество 0.6)
-                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.6);
+                    // Сильно сжимаем (качество 0.4), чтобы обойти лимит iOS в tg.sendData
+                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.4);
                     
                     stream.getTracks().forEach(track => track.stop());
                     
-                    // Передаем данные боту через встроенный механизм Telegram
+                    // Отправляем сжатые данные боту
                     tg.sendData(imageDataURL);
                     
                     loadBtn.innerText = 'Готово!';

